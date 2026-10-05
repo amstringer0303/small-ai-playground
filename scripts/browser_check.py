@@ -47,6 +47,8 @@ def check_browser(url, workspace):
         try:
             page.goto(url)
             expect(page.get_by_role("button", name="Train and compare", exact=True)).to_be_visible()
+            assert page.locator("#simple-run").bounding_box()["y"] < 800, "The first action must be on screen"
+            expect(page.locator("#simple-training-data")).not_to_be_visible()
             def select_question(mode):
                 page.get_by_role("listbox", name="Question", exact=True).click()
                 page.get_by_role("option", name=FOCUS[mode], exact=True).click()
@@ -60,6 +62,24 @@ def check_browser(url, workspace):
             select_question("location")
             train()
 
+            select_question("labels")
+            expect(page.get_by_role("button", name="Train and compare", exact=True)).to_be_disabled()
+            page.locator("#correction-label").get_by_role("radio", name="Alert (needs review)", exact=True).check()
+            expect(page.locator("#simple-decision")).to_contain_text("1 labels changed", timeout=30000)
+            expect(page.get_by_role("button", name="Train and compare", exact=True)).to_be_enabled()
+            page.locator("#correction-included").get_by_role("checkbox").uncheck()
+            expect(page.locator("#simple-decision")).to_contain_text("1 training readings excluded", timeout=30000)
+            select_question("location")
+            expect(page.get_by_role("button", name="Train and compare", exact=True)).to_be_disabled()
+            expect(page.locator("#simple-status")).to_contain_text("Unapplied data corrections", timeout=30000)
+            page.get_by_role("button", name="Reset readings", exact=True).click()
+            expect(page.get_by_role("button", name="Train and compare", exact=True)).to_be_enabled()
+            expect(page.get_by_role("button", name="Reset readings", exact=True)).to_be_disabled()
+            select_question("labels")
+            expect(page.locator("#correction-label")).to_be_visible()
+            expect(page.locator("#simple-decision")).to_contain_text("0 labels changed", timeout=30000)
+            expect(page.get_by_role("button", name="Train and compare", exact=True)).to_be_disabled()
+            page.locator("#training-readings").get_by_role("button", name="Training readings").click()
             row = page.locator("#simple-training-data").get_by_role("row").filter(has_text="air-0000")
             row.get_by_role("button", name="normal", exact=True).dblclick()
             expect(row.get_by_role("textbox", name="Edit cell", exact=True)).to_be_visible()
@@ -121,9 +141,8 @@ def check_browser(url, workspace):
                 expect(mobile.locator("#simple-summary")).to_contain_text(f"Run {last['number']}", timeout=60000)
                 assert mobile.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"Overflow at {width}px"
                 if width < 700:
-                    data_box = mobile.locator("#simple-training-data").bounding_box()
                     action_box = mobile.locator("#simple-run").bounding_box()
-                    assert action_box["y"] > data_box["y"] + data_box["height"], "Mobile controls must stack"
+                    assert action_box["y"] + action_box["height"] < 844, "Mobile first action must fit on screen"
                     assert mobile.locator("#simple-metrics").bounding_box()["width"] > 300
                 mobile.screenshot(path=str(screenshots / f"mobile-{width}.png"), full_page=True)
                 mobile.close()

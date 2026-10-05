@@ -8,14 +8,28 @@
 #simple-decision { min-height: 46px; }
 #simple-status { min-height: 32px; }
 #simple-summary { min-height: 54px; }
+#simple-controls { align-items: flex-start; }
+#simple-controls > div { min-width: 0 !important; }
+#simple-controls .prose h3 { margin-top: 0; }
+#simple-decision p { font-size: 14px; color: #394750; }
+#simple-summary p { font-size: 14px; }
+#comparison-terms { max-width: 960px; padding: 4px 0 12px; }
+#reading-correction { padding-bottom: 14px; border-bottom: 1px solid #dbe1e5; }
 #simple-training-data { font-size: 12px; }
 #simple-metrics { min-height: 168px; }
 .outcome-table { width: 100%; table-layout: fixed; border-collapse: collapse; border: 0 !important; font-size: 13px; line-height: 1.45; letter-spacing: 0; }
 .outcome-table th, .outcome-table td { text-align: left; padding: 14px 10px; border: 0 !important; border-bottom: 1px solid #dbe1e5 !important; vertical-align: top; overflow-wrap: anywhere; }
 .outcome-table th { font-weight: 600; color: #4c5963; }
 .outcome-table th:first-child { width: 27%; }
-.outcome-table td:nth-child(3) { color: #17785a; font-weight: 600; }
+.outcome-table td:nth-child(3) { font-weight: 600; }
 .outcome-table td { color: #202a31; }
+.target-evidence-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 20px 0; }
+.target-evidence { display: grid; gap: 5px; min-width: 0; border-top: 2px solid #cfd7dc; padding-top: 10px; font-size: 12px; color: #4c5963; }
+.target-evidence strong { font-size: 20px; color: #202a31; }
+.target-evidence small { font-size: 12px; }
+.target-status { font-weight: 600; }
+.target-status.met { color: #17785a; }
+.target-status.not-met { color: #a62e54; }
 @media (max-width: 700px) {
   #simple-controls, #simple-results { flex-direction: column !important; flex-wrap: nowrap !important; }
   #simple-controls > div, #simple-results > div { width: 100% !important; flex: none !important; }
@@ -24,4 +38,7 @@
   .local-state { font-size: 10px; }
   .outcome-table { font-size: 12px; }
   .outcome-table th, .outcome-table td { padding: 10px 5px; }
+  .target-evidence-grid { grid-template-columns: 1fr; gap: 12px; }
+  .target-evidence { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
+  .target-evidence small { grid-column: 1 / -1; }
 }

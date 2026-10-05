@@ -1,9 +1,10 @@
 import pandas as pd
+from html import escape
 from matplotlib.figure import Figure
 
 from experiments.comparison import compare_goals, prediction_changes
 from ui.views import weight_view
-from playground.community import goal_text
+from playground.community import check_metrics, goal_text
 
 
 def targets(playground):
@@ -16,11 +17,47 @@ def metric_table(original, changed):
     return pd.DataFrame([
         {"Result": "Accuracy", "Original": f"{a['accuracy']:.1%}", "Your choice": f"{b['accuracy']:.1%}",
          "Difference": f"{(b['accuracy'] - a['accuracy']) * 100:+.1f} percentage points"},
-        {"Result": "Missed alerts", "Original": str(a["false_negatives"]), "Your choice": str(b["false_negatives"]),
-         "Difference": f"{b['false_negatives'] - a['false_negatives']:+d}"},
-        {"Result": "False alarms", "Original": str(a["false_positives"]), "Your choice": str(b["false_positives"]),
-         "Difference": f"{b['false_positives'] - a['false_positives']:+d}"},
+        {"Result": "Missed alerts", "Original": f"{a['false_negatives']} of {a['false_negatives'] + a['true_positives']}",
+         "Your choice": f"{b['false_negatives']} of {b['false_negatives'] + b['true_positives']}",
+         "Difference": count_change(a["false_negatives"], b["false_negatives"])},
+        {"Result": "False alarms", "Original": f"{a['false_positives']} of {a['false_positives'] + a['true_negatives']}",
+         "Your choice": f"{b['false_positives']} of {b['false_positives'] + b['true_negatives']}",
+         "Difference": count_change(a["false_positives"], b["false_positives"])},
     ])
+
+
+def count_change(before, after):
+    return f"{abs(after - before)} {'fewer' if after < before else 'more'}" if after != before else "No change"
+
+
+def target_evidence(record, goal):
+    metrics, checks = record["metrics"], check_metrics(record["metrics"], goal)
+    entries = [
+        ("Missed-alert rate", metrics["false_negative_rate"], "at most", goal.max_false_negative_rate),
+        ("False-alarm rate", metrics["false_positive_rate"], "at most", goal.max_false_positive_rate),
+        ("Accuracy", metrics["accuracy"], "at least", goal.min_accuracy),
+    ]
+    items = []
+    for label, observed, direction, limit in entries:
+        status = "Met" if checks[label] else "Not met"
+        value = f"{observed:.1%}" if observed is not None else "No supporting examples"
+        items.append(f'<div class="target-evidence"><span>{escape(label)}</span><strong>{value}</strong>'
+                     f'<span class="target-status {"met" if checks[label] else "not-met"}">{status}</span>'
+                     f'<small>Target: {direction} {limit:.0%}</small></div>')
+    return '<div class="target-evidence-grid" aria-label="Prediction target results">' + "".join(items) + "</div>"
+
+
+def interpretation(original, changed, goal):
+    a, b = original["metrics"], changed["metrics"]
+    misses = count_change(a["false_negatives"], b["false_negatives"]).lower()
+    alarms = count_change(a["false_positives"], b["false_positives"]).lower()
+    misses = "no change in missed alerts" if misses == "no change" else f"{misses} missed alerts"
+    alarms = "no change in false alarms" if alarms == "no change" else f"{alarms} false alarms"
+    passed = sum(check_metrics(b, goal).values())
+    result = f"**The tradeoff: {misses}; {alarms}.** "
+    result += ("All three prediction targets met in this run." if passed == 3 else
+               f"{passed} of 3 prediction targets met in this run.")
+    return result + " One run on fictional data is not evidence of reliable real-world performance."
 
 
 def outcome_plot(original, changed):
@@ -41,7 +78,7 @@ def outcome_plot(original, changed):
 
 def pair_view(playground, identifier):
     if not identifier:
-        return ("No saved comparisons.", "", None, pd.DataFrame(), pd.DataFrame(),
+        return ("No saved comparison yet.", "", None, pd.DataFrame(), pd.DataFrame(),
                 None, pd.DataFrame(), None, "", None, pd.DataFrame(), None, "")
     pair = playground.pair(identifier)
     original, changed = playground.records(pair)
@@ -49,12 +86,15 @@ def pair_view(playground, identifier):
     reference = playground.manager.datasets.reference(playground.original.test_fraction, playground.original.split_seed)
     alerts = int(reference.condition.eq("alert").sum())
     normals = len(reference) - alerts
-    summary = (f"**Run {pair['number']}** / {pair['decision']}\n\n"
+    goal = playground.manager.goal(pair["goal_id"])
+    decision = f"Alert-error importance: {pair['penalty']:g}x" if pair["choice"] == "missed" else pair["decision"]
+    summary = (f"**Saved Run {pair['number']}** / {decision}\n\n"
+               f"{interpretation(original, changed, goal)}\n\n"
                f"{len(reference)} identical test readings: {alerts} alert, {normals} normal. "
                f"**{difference['changed_predictions']} predictions changed.**")
     if not difference["changed_predictions"]:
         summary += " No classifications changed; probabilities may still differ."
-    goal_rows = compare_goals([original, changed], playground.manager.goal(pair["goal_id"]))
+    goal_rows = compare_goals([original, changed], goal)
     goals = pd.DataFrame([
         {"Goal": rows.iloc[0]["goal"], "Criterion": rows.iloc[0]["criterion"],
          "Original": rows.iloc[0]["status"], "Your choice": rows.iloc[1]["status"]}
@@ -69,5 +109,6 @@ def pair_view(playground, identifier):
     a = weight_view(original, "hidden.weight")
     b = weight_view(changed, "hidden.weight")
     table = metric_table(original, changed).to_html(index=False, border=0, classes="outcome-table")
+    table += target_evidence(changed, goal)
     return (summary, table, outcome_plot(original, changed), goals, predictions,
             a[1], a[2], a[3], a[0], b[1], b[2], b[3], b[0])

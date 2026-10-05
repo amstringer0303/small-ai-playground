@@ -3,7 +3,8 @@
 A small local research playground for one question:
 **What changes when people alter the data or priorities used to train a model?**
 
-The first screen starts with a community question, then data, one concrete choice, and measured outcomes.
+The first screen puts the community question and training choice beside the main action.
+Detailed data is optional; the comparison explains error counts, rates, targets, and tradeoffs.
 No experiment naming, JSON, model selection, or training setup is required.
 The full research laboratory remains in **Advanced**.
 
@@ -28,10 +29,10 @@ Gradio telemetry is disabled and external asset tags are filtered.
 ## First experiment
 
 1. Open **Playground**. The source is explicitly labeled **synthetic data**.
-2. Keep **Missed reviews** selected, with alert-example importance at **5**.
+2. Keep **Missed reviews** selected, with **Alert-error importance** at **5**.
 3. Click **Train and compare**.
-4. Compare the original model with your changed model: accuracy, missed alerts,
-   false alarms, and individual predictions. A change can help one outcome and hurt another.
+4. Read the saved comparison's tradeoff sentence, original/changed counts,
+   and **Met / Not met** status for each prediction target.
 5. Change one choice and run again. **Saved runs** keeps every comparison.
 
 The baseline learns from the unchanged original data with a 1x alert loss weight.
@@ -40,11 +41,25 @@ and 144 test readings. The original baseline is reused after its first training;
 the saved status identifies reuse. Comparisons are to the original, not automatically
 to the previous intervention.
 
+An **alert** is a simulated label for a reading needing review, not a health warning.
+A **missed alert** is an alert example predicted as normal. A **false alarm** is a normal
+example predicted as alert. Accuracy counts all correct predictions, so it can conceal
+the errors that matter most to the question. Missed-alert and false-alarm rates have
+different denominators: alert examples and normal examples, respectively.
+
+Training importance changes what errors count most during learning. **Recorded success
+targets** are separate evaluation limits; they are not training settings. A target marked
+**Met** refers to one run's observed prediction rate, not proven reliability or every
+resource/governance requirement. The original goals and underlying records remain accessible.
+
 ## Four consequential choices
 
 - **Give missed alerts more importance:** multiply the training loss for alert examples.
 - **Leave out flagged readings:** exclude flagged training rows, keeping test rows fixed.
-- **Edit labels or include readings:** edit the table and save an immutable data variant.
+- **Edit labels or include readings:** select **Community corrections**, choose a reading,
+  then change its normal/alert label or training-inclusion checkbox. Corrections immediately
+  update the draft and its counts; **Train and compare** saves an immutable data variant.
+  The optional **Training readings** table also supports edits.
   Labels must be `normal` or `alert` here; Advanced supports additional categories.
 - **Leave out location information:** exclude coordinates, site, and sensor identifiers
   from model inputs. Older raw data snapshots remain on disk; this is not data erasure.
@@ -68,11 +83,14 @@ python app.py --workspace outputs/new-community-study
 ```
 
 Fresh-workspace runs save `protocol.json` before training and produce `study-results.json`,
-`community-study.html`, and `community-study.md`. **Worked example** downloads the
+`community-study.html`, and `community-study.md`. **Download worked example** downloads the
 self-contained HTML report when the app uses that study workspace. Existing studies are
 never overwritten by the script. Raw synthetic checkpoints/results remain ignored by Git.
 
 Editing a label or Use reading checkbox selects the data-edit choice automatically.
+**Train and compare** is disabled until a correction exists for the correction question.
+Pending corrections keep other questions disabled until **Reset readings** or a return
+to the correction question, so edits cannot be accidentally ignored.
 Reading IDs and measurements are read-only on the simple screen. Advanced supports
 editing measurements and adding examples. To switch to a different intervention
 after editing, reset the table first; edits are never silently ignored.

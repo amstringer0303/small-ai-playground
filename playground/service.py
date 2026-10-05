@@ -42,6 +42,29 @@ class Playground:
         frame["Flagged"] = frame["Flagged"].map({0: "No", 1: "Yes"})
         return frame
 
+    def corrections(self, editor):
+        frame = self.edited_frame(editor)
+        original = self.manager.datasets.frame(self.original.id)
+        return {"labels": int(frame.condition.ne(original.condition).sum()),
+                "excluded": int((~frame.included).sum()), "changed": not frame.equals(original)}
+
+    def reading(self, editor, identifier):
+        if identifier not in set(self.editor().Reading):
+            raise ValueError("Choose a training reading.")
+        return self.edited_frame(editor).set_index("example_id").loc[identifier]
+
+    def correct_reading(self, editor, identifier, label, included):
+        self.reading(editor, identifier)
+        if label not in {"normal", "alert"}:
+            raise ValueError("Use normal or alert as the label.")
+        updated = editor.copy()
+        selected = updated.Reading.eq(identifier)
+        if not selected.any():
+            raise ValueError("This reading is no longer in the training table.")
+        updated.loc[selected, "Label"] = label
+        updated.loc[selected, "Use reading"] = bool(included)
+        return updated
+
     def pairs(self):
         pairs = [json.loads(path.read_text(encoding="utf-8")) for path in self.directory.glob("*/comparison.json")]
         return sorted(pairs, key=lambda pair: pair["created_at"])
@@ -94,7 +117,7 @@ class Playground:
         frame = original_frame.copy()
         if choice == "labels":
             if not changed:
-                raise ValueError("Change a label, reading value, or Use reading checkbox before training this comparison.")
+                raise ValueError("Change a label or Use reading checkbox before training this comparison.")
             frame = edited
         elif choice == "flagged":
             training = self.manager.datasets.training_frame(self.original.id)
