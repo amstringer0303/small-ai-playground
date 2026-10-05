@@ -10,7 +10,8 @@ from starlette.middleware import Middleware
 
 from advanced_lab import build_app as build_advanced, checked
 from data.datasets import ROOT
-from playground.service import CHOICES, Playground
+from playground.service import Playground
+from playground.community import FOCUS, QUESTIONS
 from playground.views import pair_view, targets
 from ui.offline import LocalAssetsMiddleware
 
@@ -23,6 +24,15 @@ def build_app(workspace=None):
                 '<div class="local-state">LOCAL CPU / NO AI API</div></header>')
         with gr.Tabs() as tabs:
             with gr.Tab("Playground", id="playground"):
+                gr.Markdown("### Community question")
+                choice = gr.Dropdown([(focus, mode) for mode, focus in FOCUS.items()], value="missed",
+                                     label="Question", elem_id="simple-choice")
+                question_text = gr.Markdown(f"**{QUESTIONS['missed']}**", elem_id="community-question-text")
+                goal_status = gr.Markdown(targets(playground), elem_id="community-targets")
+                study_path = playground.manager.root / "community-study.html"
+                if study_path.exists():
+                    gr.DownloadButton("Worked example", value=str(study_path), size="sm", scale=0,
+                                      elem_id="community-study")
                 with gr.Row(elem_id="simple-controls"):
                     with gr.Column(scale=3, min_width=280):
                         gr.Markdown("### Data")
@@ -40,8 +50,6 @@ def build_app(workspace=None):
                             gr.Markdown((ROOT / "data" / "PROVENANCE.md").read_text(encoding="utf-8"))
                     with gr.Column(scale=2, min_width=280):
                         gr.Markdown("### Your decision")
-                        choice = gr.Radio([(label, value) for value, label in CHOICES.items()], value="missed",
-                                          label="Change one thing", elem_id="simple-choice")
                         penalty = gr.Slider(1, 10, value=5, step=1, label="Alert-example importance", elem_id="simple-penalty")
                         decision = gr.Markdown("Alert examples receive **5x training loss weight**.", elem_id="simple-decision")
                         gr.Markdown("**Model:** small PyTorch network / CPU / fixed seed 42")
@@ -55,7 +63,6 @@ def build_app(workspace=None):
                     with gr.Column(scale=2, min_width=280):
                         plot = gr.Plot(label="Missed alerts and false alarms", show_label=False)
                 with gr.Accordion("Original goals and changed predictions", open=False):
-                    goal_status = gr.Markdown(targets(playground))
                     goals = gr.Dataframe(interactive=False, label="Original acceptance criteria", wrap=True)
                     predictions = gr.Dataframe(interactive=False, label="Readings whose classification changed", wrap=True)
                 with gr.Accordion("Learned weights", open=False):
@@ -112,11 +119,11 @@ def build_app(workspace=None):
                      "flagged": "Flagged training readings will be excluded. Test readings stay unchanged.",
                      "labels": "Training edits will be saved in a new data version. Test labels stay unchanged.",
                      "location": "Coordinates, site, and sensor identifiers will be excluded from model inputs."}
-            return gr.update(visible=mode == "missed"), gr.update(interactive=True), notes[mode]
+            return gr.update(visible=mode == "missed"), gr.update(interactive=True), notes[mode], f"**{QUESTIONS[mode]}**"
 
-        choice.change(decision_view, [choice, penalty], [penalty, editor, decision])
+        choice.change(decision_view, [choice, penalty], [penalty, editor, decision, question_text])
         editor.input(lambda: "labels", [], [choice])
-        penalty.change(decision_view, [choice, penalty], [penalty, editor, decision])
+        penalty.change(decision_view, [choice, penalty], [penalty, editor, decision, question_text])
         reset.click(lambda: playground.editor(), [], [editor])
         run.click(checked(train), [choice, penalty, editor], [pair_id, status, export, download],
                   api_name="train_comparison", concurrency_id="model-training") \

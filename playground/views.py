@@ -3,12 +3,12 @@ from matplotlib.figure import Figure
 
 from experiments.comparison import compare_goals, prediction_changes
 from ui.views import weight_view
+from playground.community import goal_text
 
 
 def targets(playground):
     goal = playground.manager.goal(playground.goal_id())
-    return (f"Accuracy >= {goal.min_accuracy:.0%}  |  Missed-alert rate <= {goal.max_false_negative_rate:.0%}  |  "
-            f"False-alarm rate <= {goal.max_false_positive_rate:.0%}")
+    return goal_text(goal)
 
 
 def metric_table(original, changed):

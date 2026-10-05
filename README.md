@@ -3,7 +3,7 @@
 A small local research playground for one question:
 **What changes when people alter the data or priorities used to train a model?**
 
-The first screen shows the data, one concrete choice, and measured outcomes.
+The first screen starts with a community question, then data, one concrete choice, and measured outcomes.
 No experiment naming, JSON, model selection, or training setup is required.
 The full research laboratory remains in **Advanced**.
 
@@ -28,7 +28,7 @@ Gradio telemetry is disabled and external asset tags are filtered.
 ## First experiment
 
 1. Open **Playground**. The source is explicitly labeled **synthetic data**.
-2. Keep **Give missed alerts more importance** selected, at **5**.
+2. Keep **Missed reviews** selected, with alert-example importance at **5**.
 3. Click **Train and compare**.
 4. Compare the original model with your changed model: accuracy, missed alerts,
    false alarms, and individual predictions. A change can help one outcome and hurt another.
@@ -48,6 +48,29 @@ to the previous intervention.
   Labels must be `normal` or `alert` here; Advanced supports additional categories.
 - **Leave out location information:** exclude coordinates, site, and sensor identifiers
   from model inputs. Older raw data snapshots remain on disk; this is not data erasure.
+
+The **Question** selector expresses these choices as community questions, not model settings.
+The questions and targets are proposals for discussion, not community-approved requirements.
+
+## Worked community example
+
+We selected: **Can we catch more readings needing review without too many false alarms?**
+The test records criteria before training, compares a non-AI demonstration rule and a simpler
+linear classifier, then repeats the original/5x-weighted neural pair with five fixed seeds.
+Python socket operations are blocked during training, inference, and checkpoint restoration.
+Four of five altered runs met every target; one missed the 10% missed-alert limit.
+That is not consistently passing, and it is not evidence of real-world health protection.
+See the [recorded walkthrough and results](docs/community-study.md).
+
+```powershell
+python -m scripts.community_study --workspace outputs/new-community-study
+python app.py --workspace outputs/new-community-study
+```
+
+Fresh-workspace runs save `protocol.json` before training and produce `study-results.json`,
+`community-study.html`, and `community-study.md`. **Worked example** downloads the
+self-contained HTML report when the app uses that study workspace. Existing studies are
+never overwritten by the script. Raw synthetic checkpoints/results remain ignored by Git.
 
 Editing a label or Use reading checkbox selects the data-edit choice automatically.
 Reading IDs and measurements are read-only on the simple screen. Advanced supports
@@ -69,7 +92,8 @@ threshold experiments, evaluation, comparison, and lineage.
 
 Before the first simple comparison, criteria are recorded: accuracy >=80%,
 missed-alert rate <=10%, false-alarm rate <=20%, local/offline operation,
-inspectable parameters, and sampled process RAM <=4 GB. Geographic removal is
+inspectable parameters, and sampled process RAM <=1 GB for new studies. Older studies
+keep their original recorded budgets. Geographic removal is
 **optional**, not a default ethical requirement. Advanced can revise criteria before
 the first simple comparison. Subsequent simple comparisons retain the original
 goal revision even if Advanced later saves revised goals.

@@ -10,6 +10,7 @@ from playwright.sync_api import expect, sync_playwright
 
 from data.datasets import ROOT
 from playground.service import Playground
+from playground.community import FOCUS, QUESTIONS
 
 
 def check_browser(url, workspace):
@@ -46,12 +47,17 @@ def check_browser(url, workspace):
         try:
             page.goto(url)
             expect(page.get_by_role("button", name="Train and compare", exact=True)).to_be_visible()
-            page.get_by_role("radio", name="Give missed alerts more importance", exact=True).check()
+            def select_question(mode):
+                page.get_by_role("listbox", name="Question", exact=True).click()
+                page.get_by_role("option", name=FOCUS[mode], exact=True).click()
+                expect(page.locator("#community-question-text")).to_contain_text(QUESTIONS[mode], timeout=30000)
+
+            select_question("missed")
             first = train()
             page.screenshot(path=str(screenshots / "playground.png"), full_page=True)
-            page.get_by_role("radio", name="Leave out flagged readings", exact=True).check()
+            select_question("flagged")
             train()
-            page.get_by_role("radio", name="Leave out location information", exact=True).check()
+            select_question("location")
             train()
 
             row = page.locator("#simple-training-data").get_by_role("row").filter(has_text="air-0000")
@@ -59,7 +65,7 @@ def check_browser(url, workspace):
             expect(row.get_by_role("textbox", name="Edit cell", exact=True)).to_be_visible()
             row.get_by_role("textbox", name="Edit cell", exact=True).fill("alert")
             row.get_by_role("textbox", name="Edit cell", exact=True).press("Enter")
-            expect(page.get_by_role("radio", name="Edit labels or include readings", exact=True)).to_be_checked(timeout=30000)
+            expect(page.locator("#simple-choice input")).to_have_value(FOCUS["labels"], timeout=30000)
             last = train()
             _, changed = playground.records(last)
             assert changed["dataset"]["changes"]["changed_labels"] == 1
@@ -116,8 +122,8 @@ def check_browser(url, workspace):
                 assert mobile.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"Overflow at {width}px"
                 if width < 700:
                     data_box = mobile.locator("#simple-training-data").bounding_box()
-                    choice_box = mobile.locator("#simple-choice").bounding_box()
-                    assert choice_box["y"] > data_box["y"] + data_box["height"], "Mobile controls must stack"
+                    action_box = mobile.locator("#simple-run").bounding_box()
+                    assert action_box["y"] > data_box["y"] + data_box["height"], "Mobile controls must stack"
                     assert mobile.locator("#simple-metrics").bounding_box()["width"] > 300
                 mobile.screenshot(path=str(screenshots / f"mobile-{width}.png"), full_page=True)
                 mobile.close()

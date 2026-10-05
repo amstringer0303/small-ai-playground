@@ -13,7 +13,7 @@ from experiments.comparison import compare_goals, compare_records, prediction_ch
 from experiments.manager import ExperimentManager
 from experiments.runner import run_experiment
 from experiments.schema import ExperimentConfig
-from values.schema import GoalSpec
+from playground.community import QUESTIONS, community_goals
 
 CHOICES = {
     "missed": "Give missed alerts more importance",
@@ -34,11 +34,7 @@ class Playground:
         self.directory.mkdir(exist_ok=True)
         self.lock = threading.RLock()
         if not self.manager.records() and len(self.manager.goals()) == 1:
-            self.manager.save_goals(GoalSpec(
-                project="Small / Local AI: air-quality experiment",
-                hypothesis="Changing one data or training decision changes missed alerts, false alarms, and learned weights.",
-                no_geography=False,
-            ))
+            self.manager.save_goals(community_goals())
         self.original = self.manager.datasets.all()[0]
 
     def editor(self):
@@ -145,6 +141,7 @@ class Playground:
                 "id": f"comparison-{uuid4().hex[:12]}", "number": number,
                 "created_at": datetime.now(timezone.utc).isoformat(), "choice": choice, "decision": decision,
                 "penalty": float(penalty) if choice == "missed" else 1.0, "goal_id": goal_id,
+                "community_question": QUESTIONS[choice],
                 "original_id": original["id"], "changed_id": changed["id"], "baseline_reused": reused,
                 "evaluation_id": original["evaluation_id"], "source": "Synthetic: seed 23; 720 fictional readings",
             }
