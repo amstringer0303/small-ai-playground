@@ -67,10 +67,13 @@ def test_study_preserves_protocol_and_generates_real_artifacts(tmp_path):
     assert result["test_readings"] == result["alert_examples"] + result["normal_examples"] == 144
     assert result["offline"]["attempts"] == 0
     assert result["offline"]["checkpoint_predictions_reproduced"]
+    assert result["protocol"]["criteria_status"] == "Playground criteria; not approved by a community"
     assert result["runs"][0]["original"]["final_parameters"] != result["runs"][0]["changed"]["final_parameters"]
     for name in ["protocol.json", "study-results.json", "community-study.html", "community-study.md"]:
         assert (workspace / name).exists()
     assert (workspace / "protocol.json").stat().st_mtime_ns <= (workspace / "study-results.json").stat().st_mtime_ns
     assert "data:image/png;base64," in (workspace / "community-study.html").read_text(encoding="utf-8")
+    assert "These are example questions for this playground." in (workspace / "community-study.html").read_text(encoding="utf-8")
+    assert "Example questions and targets for this playground, not health standards." in (workspace / "community-study.md").read_text(encoding="utf-8")
     with pytest.raises(ValueError, match="fresh workspace"):
         run_study(workspace)

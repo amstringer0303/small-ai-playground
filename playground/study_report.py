@@ -61,10 +61,9 @@ def write_report(result, directory):
     criterion_list = "".join(f"<li>{escape(item)}</li>" for item in criteria)
     limitations = "".join(f"<li>{escape(item)}</li>" for item in result["limitations"])
     table = lambda frame: '<div class="table-scroll">' + frame.to_html(index=False, border=0) + "</div>"
-    source_links = ('<a href="https://www.openenvironmentaldata.org/pilots/background-and-concept">OEDP community data hubs</a>'
-                    ' and <a href="https://www.epa.gov/air-sensor-toolbox">EPA Air Sensor Toolbox</a>')
+    source_link = '<a href="https://www.epa.gov/air-sensor-toolbox">EPA Air Sensor Toolbox</a>'
     html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>Community question: worked example</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Sensor review: worked example</title>
 <style>body {{ margin:0; font:15px/1.6 Arial,sans-serif; color:#202a31; background:#fff; letter-spacing:0; }}
 main {{ max-width:920px; margin:auto; padding:32px 24px; }} h1 {{ font-size:28px; line-height:1.3; }}
 h2 {{ font-size:20px; margin:0 0 12px; }} section {{ padding:24px 0; border-bottom:1px solid #dbe1e5; }}
@@ -76,10 +75,10 @@ li {{ margin-bottom:8px; }} a {{ color:#176b91; }} details {{ margin:16px 0; }}
 .decision {{ border-left:3px solid #b13b61; padding-left:16px; }}
 @media(max-width:600px) {{ main {{ padding:20px 16px; }} h1 {{ font-size:23px; }} th,td {{ padding:9px 7px; }} }}</style></head>
 <body><main><div class="state">SMALL / LOCAL AI &middot; SYNTHETIC WORKED EXAMPLE</div>
-<h1>Community sensor review</h1><p class="note">Real local model training. Fictional readings. No community approval or health advice.</p>
+<h1>Sensor review playground</h1><p class="note">Real local model training. Fictional readings. No community approval or health advice.</p>
 <section><h2>1. Choose a community question</h2><p><strong>{escape(result['protocol']['question'])}</strong></p>
 <details><summary>Other potential questions</summary><ul>{question_list}</ul></details>
-<p class="note">These are our proposed questions, informed by {source_links}, not an official OEDP AI program.</p></section>
+<p class="note">These are example questions for this playground. Air-sensor background: {source_link}.</p></section>
 <section><h2>2. Record success before testing</h2><ul>{criterion_list}</ul>
 <p class="note">Prototype targets only. Residents would need to decide acceptable errors and review capacity.</p></section>
 <section><h2>3. Run a controlled test</h2><p>720 simulated readings: 576 training candidates and the same 144 evaluation readings
@@ -100,15 +99,14 @@ obtain permissioned, quality-checked data; then reserve a genuinely untouched, t
 </main></body></html>'''
     (directory / "community-study.html").write_text(html, encoding="utf-8")
     markdown = "\n".join([
-        "# Community question: worked example", "", result["protocol"]["question"], "",
+        "# Sensor review: worked example", "", result["protocol"]["question"], "",
         "Synthetic study; proposed criteria, not community-approved or health guidance.", "",
         "## Potential questions", *[f"- {q}" for q in result["protocol"]["potential_questions"].values()], "",
         "## Criteria recorded before training", *[f"- {item}" for item in criteria], "",
         "## Results (seed 42)", "```text", result_table(result).to_string(index=False), "```", "",
         "## Five fixed seeds", "```text", repeated.to_string(index=False), "```", "", resource_text, "",
         "## Decision", conclusion(result), "", "## Limits", *[f"- {item}" for item in result["limitations"]], "",
-        "## Sources", "Proposed interpretation, not official or endorsed OEDP criteria.",
-        "- [OEDP community data hubs](https://www.openenvironmentaldata.org/pilots/background-and-concept)",
+        "## Background", "Example questions and targets for this playground, not health standards.",
         "- [EPA Air Sensor Toolbox](https://www.epa.gov/air-sensor-toolbox)", "",
         "Regenerate with `python -m scripts.community_study --workspace outputs/new-community-study`.",
     ])

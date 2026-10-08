@@ -47,7 +47,7 @@ def run_study(workspace):
         "created_at": datetime.now(timezone.utc).isoformat(),
         "question": QUESTIONS["missed"], "potential_questions": QUESTIONS,
         "additional_question": "Can it run on an ordinary laptop without internet or a paid AI service?",
-        "criteria_status": "Proposed prototype criteria; not approved by a community or OEDP",
+        "criteria_status": "Playground criteria; not approved by a community",
         "goal_id": goal_id, "goals": asdict(goal), "resource_limits": LIMITS,
         "source": "Synthetic: 720 invented readings, generation seed 23; not health or regulatory labels",
         "dataset_id": playground.original.id, "dataset_hash": playground.original.content_hash,

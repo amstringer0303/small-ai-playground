@@ -1,4 +1,4 @@
-# Community question: worked example
+# Sensor review: worked example
 
 Can we catch more readings needing review without too many false alarms?
 
@@ -51,9 +51,8 @@ Only 4 of 5 changed-model runs passed every prototype target. The intervention i
 - The offline guard covers Python socket operations in this process, not every possible native-library network path or the whole device.
 - Location inputs remain in this case. Local computation is not anonymization or a complete privacy/governance assessment.
 
-## Sources
-Proposed interpretation, not official or endorsed OEDP criteria.
-- [OEDP community data hubs](https://www.openenvironmentaldata.org/pilots/background-and-concept)
+## Background
+Example questions and targets for this playground, not health standards.
 - [EPA Air Sensor Toolbox](https://www.epa.gov/air-sensor-toolbox)
 
 Regenerate with `python -m scripts.community_study --workspace outputs/new-community-study`.
