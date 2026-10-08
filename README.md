@@ -4,7 +4,7 @@ A playground for trying a small AI model and seeing how different choices affect
 its predictions. The example is air quality: which sensor readings need a review?
 
 The neural network trains on your computer. The training and results are real,
-but the readings are made up. This is a research prototype, not a chatbot or an
+but the readings are dummy data. This is a research prototype, not a chatbot or an
 air-quality warning service.
 
 ## Try it
