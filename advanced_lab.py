@@ -33,8 +33,8 @@ def build_app(workspace=None, expose_sync=False):
     manager = ExperimentManager(Path(workspace) if workspace else None)
     controller = LabController(manager)
     active_goal = manager.goals()[-1]
-    with gr.Blocks(title="Small / Local AI Playground", analytics_enabled=False) as demo:
-        gr.HTML('<header id="lab-header"><h1>Small / Local AI Playground</h1><div class="state">LOCAL LAB &nbsp; / &nbsp; Air quality &nbsp; / &nbsp; v0.1</div></header>')
+    with gr.Blocks(title="Small AI Playground", analytics_enabled=False) as demo:
+        gr.HTML('<header id="lab-header"><h1>Small AI Playground</h1><div class="state">LOCAL LAB &nbsp; / &nbsp; Air quality &nbsp; / &nbsp; v0.1</div></header>')
         goal_id = gr.State(active_goal["id"])
         last_run = gr.State(None)
         with gr.Tabs():

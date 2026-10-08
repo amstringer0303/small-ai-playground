@@ -1,4 +1,4 @@
-# Small / Local AI
+# Small AI Playground
 
 A playground for trying a small AI model and seeing how different choices affect
 its predictions. The example is air quality: which sensor readings need a review?
@@ -11,8 +11,8 @@ but the readings are dummy data. This is a research prototype.
 You'll need Python 3.11-3.13. On Windows, run:
 
 ```powershell
-git clone https://github.com/amstringer0303/small-local-ai-simple.git
-cd small-local-ai-simple
+git clone https://github.com/amstringer0303/small-ai-playground.git
+cd small-ai-playground
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe app.py

@@ -14,7 +14,7 @@ def export_design_record(manager, selected_ids=None, destination: Path | None = 
     goal = manager.original_goal()
     comparison = compare_records(records)
     assessment = compare_goals(records, goal)
-    payload = {"format_version": "0.1", "title": "Small / Local AI Design Record",
+    payload = {"format_version": "0.1", "title": "Small AI Playground Design Record",
                "exported_at": datetime.now(timezone.utc).isoformat(),
                "product_thesis": "Participation means consequential control over what the model learns.",
                "dataset_provenance": "Synthetic: seed 23; see data/PROVENANCE.md",
@@ -24,7 +24,7 @@ def export_design_record(manager, selected_ids=None, destination: Path | None = 
                  "RAM is sampled process RSS, not an enforced OS limit.",
                  "Changing holdout cohorts breaks controlled comparability.",
                  "Raw training data and executable checkpoints are omitted from this export; local lab snapshots are needed for replay."]}
-    lines = ["# Small / Local AI Design Record", "", f"Project: {goal.project}", "",
+    lines = ["# Small AI Playground Design Record", "", f"Project: {goal.project}", "",
              f"Original hypothesis: {goal.hypothesis}", "", "## Experiments", ""]
     for record in records:
         config, metrics = record["config"], record["metrics"]

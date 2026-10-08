@@ -27,8 +27,8 @@ def build_app(workspace=None):
         return f"**{row.site}** / simulated PM2.5 **{row.pm25:g}** / PM10 **{row.pm10:g}** / {flag}."
 
     advanced, _, advanced_sync = build_advanced(playground.manager.root, expose_sync=True)
-    with gr.Blocks(title="Small / Local AI - Simple Playground", analytics_enabled=False) as demo:
-        gr.HTML('<header id="simple-header"><div><h1>Small / Local AI</h1><span>Air-quality playground</span></div>'
+    with gr.Blocks(title="Small AI Playground", analytics_enabled=False) as demo:
+        gr.HTML('<header id="simple-header"><div><h1>Small AI Playground</h1><span>Air-quality playground</span></div>'
                 '<div class="local-state">LOCAL CPU / NO AI API</div></header>')
         with gr.Tabs() as tabs:
             with gr.Tab("Playground", id="playground"):

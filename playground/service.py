@@ -199,7 +199,7 @@ class Playground:
                      "Raw datasets and executable checkpoints are omitted; replay requires the local workspace."]}
         changed_predictions = prediction_changes(original, changed)
         summary = "\n".join([
-            "# Small / Local AI experiment", "", pair["decision"], "",
+            "# Small AI Playground experiment", "", pair["decision"], "",
             "Data: 720 fictional readings generated with seed 23; no live environmental feed.",
             f"Model: small CPU PyTorch network; seed 42; {original['metrics']['test_examples']} fixed test readings.", "",
             f"Original: accuracy {original['metrics']['accuracy']:.1%}; missed alerts {original['metrics']['false_negatives']}; false alarms {original['metrics']['false_positives']}.",

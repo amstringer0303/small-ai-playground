@@ -14,6 +14,7 @@ def test_proposed_goals_are_explicit_and_location_is_optional():
     goal.validate()
     assert goal.problem == QUESTIONS["missed"]
     assert not goal.no_geography
+    assert goal.project == "Small AI Playground: sensor review"
     assert goal.max_ram_gb == 1.0
 
 
@@ -74,6 +75,7 @@ def test_study_preserves_protocol_and_generates_real_artifacts(tmp_path):
     assert (workspace / "protocol.json").stat().st_mtime_ns <= (workspace / "study-results.json").stat().st_mtime_ns
     assert "data:image/png;base64," in (workspace / "community-study.html").read_text(encoding="utf-8")
     assert "These are example questions for this playground." in (workspace / "community-study.html").read_text(encoding="utf-8")
+    assert "<h1>Small AI Playground</h1>" in (workspace / "community-study.html").read_text(encoding="utf-8")
     assert "Example questions and targets for this playground, not health standards." in (workspace / "community-study.md").read_text(encoding="utf-8")
     with pytest.raises(ValueError, match="fresh workspace"):
         run_study(workspace)

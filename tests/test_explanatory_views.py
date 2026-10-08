@@ -78,6 +78,9 @@ def test_decision_definitions_distinguish_weights_and_data_changes():
 def test_opening_view_keeps_table_optional_and_correction_fields_hidden(tmp_path):
     from app import build_app
     app, _ = build_app(tmp_path / "beginner-ui")
+    assert app.config["title"] == "Small AI Playground"
+    assert any("<h1>Small AI Playground</h1>" in c["props"].get("value", "")
+               for c in app.config["components"] if c["type"] == "html")
     props = {c["props"].get("elem_id"): c["props"] for c in app.config["components"]}
     assert not props["training-readings"]["open"]
     assert not props["reading-correction"]["visible"]

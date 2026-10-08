@@ -1,4 +1,4 @@
-# Sensor review: worked example
+# Small AI Playground: worked example
 
 Can we catch more readings needing review without too many false alarms?
 

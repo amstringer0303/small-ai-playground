@@ -17,7 +17,7 @@ LIMITS = {"training_seconds": 60.0, "inference_ms": 50.0, "model_bytes": 1024 * 
 
 def community_goals():
     return GoalSpec(
-        project="Community sensor review: small / local AI",
+        project="Small AI Playground: sensor review",
         problem=QUESTIONS["missed"],
         hypothesis="Giving alert examples 5x loss weight reduces missed reviews without exceeding the false-alarm budget.",
         no_geography=False,

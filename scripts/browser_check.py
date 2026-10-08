@@ -35,18 +35,34 @@ def check_browser(url, workspace):
         page = context.new_page()
         page.on("pageerror", lambda error: errors.append(str(error)))
 
+        def wait_for_checkpoint(pair):
+            changed = playground.manager.record(pair["changed_id"])
+            page.get_by_role("tab", name="Advanced", exact=True).click()
+            page.get_by_role("tab", name="Model weights", exact=True).click()
+            checkpoint = page.get_by_role("listbox", name="Neural checkpoint", exact=True)
+            expect(checkpoint).to_have_value(f"{changed['config']['name']} / {changed['id']}", timeout=60000)
+            page.get_by_role("tab", name="Playground", exact=True).click()
+
         def train():
             number = len(playground.pairs()) + 1
             page.get_by_role("button", name="Train and compare", exact=True).click()
             expect(page.locator("#simple-status")).to_contain_text(f"Saved Run {number}.", timeout=120000)
             expect(page.locator("#simple-summary")).to_contain_text(f"Run {number}", timeout=60000)
             expect(page.locator("#simple-metrics")).to_contain_text("Missed alerts", timeout=60000)
+            pair = playground.pairs()[-1]
+            wait_for_checkpoint(pair)
             print("UI saved Run", number, flush=True)
-            return playground.pairs()[-1]
+            return pair
 
         try:
             page.goto(url)
+            expect(page).to_have_title("Small AI Playground")
+            expect(page.locator("#simple-header").get_by_role("heading", name="Small AI Playground", exact=True)).to_be_visible()
             expect(page.get_by_role("button", name="Train and compare", exact=True)).to_be_visible()
+            if playground.pairs():
+                latest = playground.pairs()[-1]
+                expect(page.locator("#simple-summary")).to_contain_text(f"Run {latest['number']}", timeout=60000)
+                wait_for_checkpoint(latest)
             assert page.locator("#simple-run").bounding_box()["y"] < 800, "The first action must be on screen"
             expect(page.locator("#simple-training-data")).not_to_be_visible()
             def select_question(mode):
@@ -119,6 +135,7 @@ def check_browser(url, workspace):
             from zipfile import ZipFile
             with ZipFile(reopened.value.path()) as archive:
                 assert json.loads(archive.read("experiment.json"))["comparison"]["id"] == first["id"]
+                assert archive.read("summary.md").decode().startswith("# Small AI Playground experiment")
 
             page.get_by_role("button", name="Learned weights", exact=False).click()
             expect(page.get_by_role("tab", name="Your changed model", exact=True)).to_be_visible()
@@ -126,6 +143,7 @@ def check_browser(url, workspace):
             page.screenshot(path=str(screenshots / "weights.png"), full_page=True)
 
             page.get_by_role("tab", name="Advanced", exact=True).click()
+            expect(page.locator("#lab-header").get_by_role("heading", name="Small AI Playground", exact=True)).to_be_visible()
             expect(page.get_by_role("tab", name="Project & goals", exact=True)).to_be_visible()
             page.get_by_role("button", name="Refresh advanced experiments", exact=True).click()
             page.get_by_role("tab", name="Model weights", exact=True).click()

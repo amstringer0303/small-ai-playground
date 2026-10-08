@@ -70,6 +70,8 @@ def test_design_record_contains_lineage_goals_and_learned_state(manager, config)
     with ZipFile(path) as archive:
         assert set(archive.namelist()) == {"design_record.json", "design_record.md", "comparison.csv", "original_goal_assessment.csv"}
         data = json.loads(archive.read("design_record.json"))
+        assert archive.read("design_record.md").decode().startswith("# Small AI Playground Design Record")
+    assert data["title"] == "Small AI Playground Design Record"
     record = data["experiments"][0]
     assert record["id"] == baseline["id"]
     assert record["dataset"]["content_hash"]
