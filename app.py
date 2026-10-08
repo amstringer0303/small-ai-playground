@@ -38,8 +38,8 @@ def build_app(workspace=None):
                         choice = gr.Dropdown([(focus, mode) for mode, focus in FOCUS.items()], value="missed",
                                              label="Question", elem_id="simple-choice")
                         question_text = gr.Markdown(f"**{QUESTIONS['missed']}**", elem_id="community-question-text")
-                        gr.Markdown("**720 fictional readings.** Simulated labels: **alert** = needs review; "
-                                    "**normal** = not flagged. Not health guidance.")
+                        gr.Markdown("**720 fictional readings.** **alert** = needs review; "
+                                    "**normal** = no review needed. Not health guidance.")
                     with gr.Column(scale=2, min_width=280):
                         gr.Markdown("### 2. Training choice")
                         penalty = gr.Slider(1, 10, value=5, step=1, label="Alert-error importance",
@@ -50,7 +50,7 @@ def build_app(workspace=None):
                                                    for row in initial_editor.itertuples()], value=first_reading,
                                                   label="Reading", elem_id="correction-reading")
                             reading_details = gr.Markdown(reading_text(playground.reading(initial_editor, first_reading)))
-                            corrected_label = gr.Radio([("Normal (not flagged)", "normal"), ("Alert (needs review)", "alert")],
+                            corrected_label = gr.Radio([("Normal (no review needed)", "normal"), ("Alert (needs review)", "alert")],
                                                        value=first_label, label="Training label", elem_id="correction-label")
                             included = gr.Checkbox(value=True, label="Use reading in training", elem_id="correction-included")
                         gr.Markdown("**Model:** small CPU neural network")

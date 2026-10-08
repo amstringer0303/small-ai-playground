@@ -32,7 +32,8 @@ at **5**, then click **Train and compare**.
 
 - **Missed reviews:** give alert examples more weight during training. This may
   catch more alerts, but it can also produce more false alarms.
-- **Suspect readings:** leave out training readings marked with a sensor-problem flag.
+- **Suspect readings:** test whether leaving out readings already marked as
+  unreliable improves review predictions. The model isn't finding sensor faults.
 - **Community corrections:** choose a reading and change its normal/alert label
   or whether it is used in training. The full table is under **Training readings**.
 - **Location inputs:** train without coordinates, site names, or sensor IDs.
@@ -55,6 +56,9 @@ A **missed alert** is an alert that the model calls normal. A **false alarm** is
 normal reading that the model calls an alert. **Accuracy** is the share of all
 readings classified correctly.
 
+A **sensor-problem flag** is different: it's an existing data-quality tag,
+not an alert predicted by the model.
+
 The comparison shows the counts and the tradeoff. Fewer missed alerts can come
 with more false alarms, even if overall accuracy falls.
 
@@ -74,10 +78,9 @@ The network also sets aside some training candidates for validation. The test
 readings and their original labels stay unchanged when you edit training data.
 See [where the data comes from](data/PROVENANCE.md).
 
-This is a single-user prototype. Repeatedly testing against the same readings can
-overfit them. Memory is sampled, not capped, and visible weights don't prove
-fairness or explain cause and effect. Don't use the results for health decisions
-or enter sensitive community data.
+Fictional data, not health guidance. Reusing the same test readings doesn't prove
+real-world reliability; local processing doesn't guarantee privacy. Resource
+checks apply to this setup. Don't enter sensitive data.
 
 ## Saved work
 
@@ -96,13 +99,13 @@ you trust.
 
 ## Worked example
 
-I tested whether giving alerts five times the training importance would reduce
-misses without too many false alarms. In one run, missed alerts fell from 8 to 3,
-while false alarms rose from 5 to 13. Four of five runs met the recorded targets;
-one didn't. That isn't a consistently successful result.
+The goal was to catch more readings needing review without creating too many
+unnecessary reviews. I gave alert examples five times the training importance;
+I didn't remove suspect readings in this example. Missed alerts fell from 8 to 3,
+but false alarms rose from 5 to 13. Four of five runs met the targets, not all five.
 
 The study also compares a simple rule and a linear model. The
-[full write-up](docs/community-study.md) includes the targets, results, and limits.
+[write-up](docs/community-study.md) explains the goal, change, and result.
 To repeat it in a new workspace:
 
 ```powershell

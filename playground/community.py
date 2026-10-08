@@ -5,7 +5,7 @@ from values.schema import GoalSpec
 
 QUESTIONS = {
     "missed": "Can we catch more readings needing review without too many false alarms?",
-    "flagged": "Should we exclude suspect sensor readings?",
+    "flagged": "Does leaving out suspect readings improve review predictions?",
     "labels": "What changes when residents correct training labels?",
     "location": "Can we remove location inputs without losing useful predictions?",
 }
@@ -28,7 +28,7 @@ def community_goals():
 def goal_text(goal):
     return (f"**Recorded prototype limits**\n\n"
             f"- Miss no more than **{goal.max_false_negative_rate:.0%}** of alert examples.\n"
-            f"- Falsely flag no more than **{goal.max_false_positive_rate:.0%}** of normal examples.\n"
+            f"- Send no more than **{goal.max_false_positive_rate:.0%}** of normal readings for unnecessary review.\n"
             f"- Classify at least **{goal.min_accuracy:.0%}** of all examples correctly.\n"
             f"- Local CPU; sampled process memory no more than **{goal.max_ram_gb:g} GB**.\n\n"
             "These are evaluation limits, not training weights. They are proposed targets, not community-approved standards.")
@@ -41,8 +41,8 @@ def decision_text(mode, importance, corrections):
                 "Fewer misses can come with more false alarms.")
     if mode == "flagged":
         return ("**Original:** all training readings included.\n\n"
-                "**Your training choice:** readings with a simulated sensor-problem flag are excluded. "
-                "The evaluation readings and their labels remain unchanged.")
+                "**Your choice:** exclude readings already marked as unreliable, then compare missed alerts and false alarms. "
+                "These flags are data-quality tags, not predicted alerts. The evaluation readings stay unchanged.")
     if mode == "location":
         return ("**Original:** coordinates, site and sensor identifiers are model inputs.\n\n"
                 "**Your training choice:** those inputs are omitted. The old raw snapshots still contain location information; "

@@ -76,6 +76,14 @@ def test_study_preserves_protocol_and_generates_real_artifacts(tmp_path):
     assert "data:image/png;base64," in (workspace / "community-study.html").read_text(encoding="utf-8")
     assert "These are example questions for this playground." in (workspace / "community-study.html").read_text(encoding="utf-8")
     assert "<h1>Small AI Playground</h1>" in (workspace / "community-study.html").read_text(encoding="utf-8")
-    assert "Example questions and targets for this playground, not health standards." in (workspace / "community-study.md").read_text(encoding="utf-8")
+    markdown = (workspace / "community-study.md").read_text(encoding="utf-8")
+    assert "The goal is fewer missed reviews" in markdown
+    assert "an existing tag for an unreliable reading, not an alert predicted by AI" in markdown
+    assert "This worked example keeps them and changes training importance instead." in markdown
+    limits = markdown.split("## Background and limits\n", 1)[1].split("\n", 1)[0]
+    assert len(limits.split()) <= 50
+    assert f"{result['alert_examples']} alert test readings" in limits
+    assert "Local processing does not guarantee privacy" in limits
+    assert result["limitations"]
     with pytest.raises(ValueError, match="fresh workspace"):
         run_study(workspace)

@@ -70,7 +70,11 @@ def test_decision_definitions_distinguish_weights_and_data_changes():
     corrections = {"labels": 2, "excluded": 3}
     assert "equal importance" in decision_text("missed", 5, corrections)
     assert "5x" in decision_text("missed", 5, corrections)
-    assert "evaluation readings" in decision_text("flagged", 5, corrections)
+    flagged = decision_text("flagged", 5, corrections)
+    assert "already marked as unreliable" in flagged
+    assert "data-quality tags, not predicted alerts" in flagged
+    assert "compare missed alerts and false alarms" in flagged
+    assert "evaluation readings stay unchanged" in flagged
     assert "not data erasure" in decision_text("location", 5, corrections)
     assert "2 labels changed; 3 training readings excluded" in decision_text("labels", 5, corrections)
 

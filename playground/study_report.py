@@ -26,18 +26,18 @@ def result_table(result):
 def conclusion(result):
     passed, total = result["changed_runs_passing"], len(result["runs"])
     if passed == total:
-        return f"All {total} changed-model runs passed the prototype targets. This supports a real-data pilot, not deployment."
+        return f"All {total} changed-model runs passed the prototype targets. This is a result on fictional data, not proof of real-world reliability."
     return (f"Only {passed} of {total} changed-model runs passed every prototype target. "
-            "The intervention is not consistently successful under this test; do not loosen criteria after seeing the result.")
+            "The change was not consistently successful: the goal was to pass all five.")
 
 
 def write_report(result, directory):
     first = result["runs"][0]
     goal = result["protocol"]["goals"]
     criteria = [
-        f"Miss <= {goal['max_false_negative_rate']:.0%} of alert examples.",
-        f"Falsely flag <= {goal['max_false_positive_rate']:.0%} of normal examples.",
-        f"Accuracy >= {goal['min_accuracy']:.0%}.",
+        f"Miss at most {goal['max_false_negative_rate']:.0%} of readings needing review.",
+        f"Send at most {goal['max_false_positive_rate']:.0%} of normal readings for unnecessary review.",
+        f"Classify at least {goal['min_accuracy']:.0%} of all readings correctly.",
         f"Local CPU; training <= 60 seconds; mean inference <= 50 ms; observed RAM <= {goal['max_ram_gb']:g} GB; saved model <= 1 MiB.",
         "All five changed-model runs must meet these targets; no cherry-picking a seed.",
     ]
@@ -50,6 +50,25 @@ def write_report(result, directory):
         "5x false alarms": row["changed"]["metrics"]["false_positives"],
         "All targets": "Pass" if all(row["changed_checks"].values()) else "Fail"} for row in result["runs"]])
     resources = first["changed"]["metrics"]
+    purpose = ("Imagine reviewing sensor readings by hand. The model suggests which ones need a closer look. "
+               "The goal is fewer missed reviews without too many unnecessary reviews.")
+    local_goal = ("This gives the small local model a concrete task: change how it learns, compare its errors, "
+                  "and check whether it runs on this computer without an AI API.")
+    flag_text = ("A sensor-problem flag is an existing tag for an unreliable reading, not an alert predicted by AI. "
+                 "The separate Suspect readings experiment tests whether leaving those readings out improves review predictions. "
+                 "This worked example keeps them and changes training importance instead.")
+    test_text = (f"Train two versions on the same data: one treats both kinds of error equally; "
+                 f"the other gives alert examples 5x importance. Test both on the same {result['test_readings']} readings "
+                 f"({result['alert_examples']} needing review, {result['normal_examples']} not needing review).")
+    original, changed = first["original"]["metrics"], first["changed"]["metrics"]
+    outcome = (f"Missed reviews fell from {original['false_negatives']} to {changed['false_negatives']}; "
+               f"unnecessary reviews rose from {original['false_positives']} to {changed['false_positives']}. "
+               "The model caught more alerts, but asked for more reviews.")
+    repeat_text = ("Repeat training five times with different starting weights, using the same test readings. "
+                   "The goal is to meet every target in all five runs.")
+    limits_text = (f"Fictional data and unapproved targets, not health guidance. Repeated runs reuse just "
+                   f"{result['alert_examples']} alert test readings, so they do not show real-world reliability. "
+                   "Local processing does not guarantee privacy; resource and offline checks cover only this setup.")
     resource_text = (f"Seed 42 changed model: {resources['parameter_count']} learned parameters; "
         f"{resources['model_bytes'] / 1024:.1f} KiB checkpoint; {resources['training_seconds']:.2f} s training; "
         f"{resources['inference_ms']:.2f} ms mean inference; {resources['peak_ram_mb']:.0f} MiB sampled process RAM. "
@@ -59,7 +78,6 @@ def write_report(result, directory):
     image_data = base64.b64encode(buffer.getvalue()).decode("ascii")
     question_list = "".join(f"<li>{escape(question)}</li>" for question in result["protocol"]["potential_questions"].values())
     criterion_list = "".join(f"<li>{escape(item)}</li>" for item in criteria)
-    limitations = "".join(f"<li>{escape(item)}</li>" for item in result["limitations"])
     table = lambda frame: '<div class="table-scroll">' + frame.to_html(index=False, border=0) + "</div>"
     source_link = '<a href="https://www.epa.gov/air-sensor-toolbox">EPA Air Sensor Toolbox</a>'
     html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -76,37 +94,40 @@ li {{ margin-bottom:8px; }} a {{ color:#176b91; }} details {{ margin:16px 0; }}
 @media(max-width:600px) {{ main {{ padding:20px 16px; }} h1 {{ font-size:23px; }} th,td {{ padding:9px 7px; }} }}</style></head>
 <body><main><div class="state">SENSOR REVIEW &middot; SYNTHETIC WORKED EXAMPLE</div>
 <h1>Small AI Playground</h1><p class="note">Real local model training. Fictional readings. No community approval or health advice.</p>
-<section><h2>1. Choose a community question</h2><p><strong>{escape(result['protocol']['question'])}</strong></p>
+<section><h2>1. What are we trying to improve?</h2><p><strong>{escape(result['protocol']['question'])}</strong></p>
+<p>{escape(purpose)}</p><p>{escape(local_goal)}</p>
+<details><summary>Where do sensor-problem flags fit?</summary><p>{escape(flag_text)}</p></details>
 <details><summary>Other potential questions</summary><ul>{question_list}</ul></details>
-<p class="note">These are example questions for this playground. Air-sensor background: {source_link}.</p></section>
-<section><h2>2. Record success before testing</h2><ul>{criterion_list}</ul>
+<p class="note">These are example questions for this playground.</p></section>
+<section><h2>2. What counts as success?</h2><ul>{criterion_list}</ul>
 <p class="note">Prototype targets only. Residents would need to decide acceptable errors and review capacity.</p></section>
-<section><h2>3. Run a controlled test</h2><p>720 simulated readings: 576 training candidates and the same 144 evaluation readings
-({result['alert_examples']} alert, {result['normal_examples']} normal). Neural training reserves an internal validation split.</p>
-<p>Compare a fixed non-AI rule, a simpler linear model, and an 8-hidden-unit neural network.
-Change only alert-example training importance from 1x to 5x within each neural seed pair.
-Repeat seeds 42, 7, 23, 101, and 202; keep the decision threshold at 0.5.</p>
-<p class="note">The non-AI rule flags simulated PM2.5 &gt;= 42. This is an arbitrary demonstration rule, not a health threshold.</p></section>
-<section><h2>4. Compare measured results</h2>{table(result_table(result))}
+<section><h2>3. What did we change?</h2><p>{escape(test_text)}</p>
+<details><summary>Test setup and simpler comparisons</summary><p>720 simulated readings; 576 training candidates.
+Neural training also reserves a validation split. Keep the model, inputs, decision threshold (0.5) and test set unchanged.</p>
+<p>Compare a simple PM2.5 rule and logistic regression too, to check whether a simpler option is enough.
+The rule calls PM2.5 &gt;= 42 an alert. This is an arbitrary demonstration rule, not a health threshold.</p></details></section>
+<section><h2>4. What happened?</h2><p><strong>{escape(outcome)}</strong></p>{table(result_table(result))}
 <img src="data:image/png;base64,{image_data}" alt="Original and changed model missed-alert and false-alarm counts">
-<p>{escape(resource_text)}</p><details><summary>Every criterion, seed 42</summary>{table(checks)}</details>
-<h2>Repeatability check</h2>{table(repeated)}</section>
-<section><h2>5. Make a decision</h2><p class="decision"><strong>{escape(conclusion(result))}</strong></p>
-<p>Next: agree the question and error budget with residents; check whether a simpler tool is sufficient;
-obtain permissioned, quality-checked data; then reserve a genuinely untouched, time- or site-separated evaluation set.</p>
-<details><summary>Limits of this result</summary><ul>{limitations}</ul></details></section>
+<details><summary>Did it run locally?</summary><p>{escape(resource_text)}</p>{table(checks)}</details>
+<h2>Did it work more than once?</h2><p>{escape(repeat_text)}</p>{table(repeated)}</section>
+<section><h2>5. Did it meet the goal?</h2><p class="decision"><strong>{escape(conclusion(result))}</strong></p>
+<details><summary>Background and limits</summary><p>{escape(limits_text)}</p>
+<p class="note">Air-sensor background: {source_link}. Full technical limits are saved in study-results.json.</p></details></section>
 <p class="note">Protocol, data hashes, configurations, individual predictions and learned weights are saved in the local workspace.</p>
 </main></body></html>'''
     (directory / "community-study.html").write_text(html, encoding="utf-8")
     markdown = "\n".join([
         "# Small AI Playground: worked example", "", result["protocol"]["question"], "",
-        "Synthetic study; proposed criteria, not community-approved or health guidance.", "",
-        "## Potential questions", *[f"- {q}" for q in result["protocol"]["potential_questions"].values()], "",
-        "## Criteria recorded before training", *[f"- {item}" for item in criteria], "",
-        "## Results (seed 42)", "```text", result_table(result).to_string(index=False), "```", "",
-        "## Five fixed seeds", "```text", repeated.to_string(index=False), "```", "", resource_text, "",
-        "## Decision", conclusion(result), "", "## Limits", *[f"- {item}" for item in result["limitations"]], "",
-        "## Background", "Example questions and targets for this playground, not health standards.",
+        "## What this tests", purpose, "", local_goal, "",
+        "## Where flags fit", flag_text, "",
+        "## What counts as success?", *[f"- {item}" for item in criteria], "",
+        "## What changed?", test_text, "",
+        "The study also checks a simple PM2.5 rule and logistic regression, so AI isn't assumed to be the best option.", "",
+        "## What happened?", outcome, "", "```text", result_table(result).to_string(index=False), "```", "",
+        "## Did it work more than once?", repeat_text, "", "```text", repeated.to_string(index=False), "```", "",
+        "## Did it run locally?", resource_text, "",
+        "## Did it meet the goal?", conclusion(result), "",
+        "## Background and limits", limits_text,
         "- [EPA Air Sensor Toolbox](https://www.epa.gov/air-sensor-toolbox)", "",
         "Regenerate with `python -m scripts.community_study --workspace outputs/new-community-study`.",
     ])
