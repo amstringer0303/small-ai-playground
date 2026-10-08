@@ -1,16 +1,15 @@
-# Small / Local AI: Simple Playground
+# Small / Local AI
 
-A small local research playground for one question:
-**What changes when people alter the data or priorities used to train a model?**
+A playground for trying a small AI model and seeing how different choices affect
+its predictions. The example is air quality: which sensor readings need a review?
 
-The first screen puts the community question and training choice beside the main action.
-Detailed data is optional; the comparison explains error counts, rates, targets, and tradeoffs.
-No experiment naming, JSON, model selection, or training setup is required.
-The full research laboratory remains in **Advanced**.
+The neural network trains on your computer. The training and results are real,
+but the readings are made up. This is a research prototype, not a chatbot or an
+air-quality warning service.
 
-## Run
+## Try it
 
-Python 3.11-3.13. Windows setup:
+You'll need Python 3.11-3.13. On Windows, run:
 
 ```powershell
 git clone https://github.com/amstringer0303/small-local-ai-simple.git
@@ -20,151 +19,111 @@ python -m venv .venv
 .\.venv\Scripts\python.exe app.py
 ```
 
-Open **http://127.0.0.1:7861**. Use `app.py --port 7863` if occupied.
-On macOS/Linux, substitute `.venv/bin/python` for the Windows executable.
-The model runs on CPU. No GPU, model download, API key, or cloud AI service is needed.
-Installation needs internet; installed training and inference work offline.
-Gradio telemetry is disabled and external asset tags are filtered.
+Open [localhost:7861](http://127.0.0.1:7861) in your browser. On macOS or Linux,
+use `.venv/bin/python` instead of `.\.venv\Scripts\python.exe`.
+If the port is busy, add `--port 7863` to the last command.
 
-## First experiment
+Installation needs internet. After that, training runs on CPU without a GPU,
+model download, or API key. This repo contains the code, not a hosted website.
 
-1. Open **Playground**. The source is explicitly labeled **synthetic data**.
-2. Keep **Missed reviews** selected, with **Alert-error importance** at **5**.
-3. Click **Train and compare**.
-4. Read the saved comparison's tradeoff sentence, original/changed counts,
-   and **Met / Not met** status for each prediction target.
-5. Change one choice and run again. **Saved runs** keeps every comparison.
+For a first run, leave **Missed reviews** selected and **Alert-error importance**
+at **5**, then click **Train and compare**.
 
-The baseline learns from the unchanged original data with a 1x alert loss weight.
-Your intervention is trained with the same seed, architecture, inference threshold,
-and 144 test readings. The original baseline is reused after its first training;
-the saved status identifies reuse. Comparisons are to the original, not automatically
-to the previous intervention.
+## What you can change
 
-An **alert** is a simulated label for a reading needing review, not a health warning.
-A **missed alert** is an alert example predicted as normal. A **false alarm** is a normal
-example predicted as alert. Accuracy counts all correct predictions, so it can conceal
-the errors that matter most to the question. Missed-alert and false-alarm rates have
-different denominators: alert examples and normal examples, respectively.
+- **Missed reviews:** give alert examples more weight during training. This may
+  catch more alerts, but it can also produce more false alarms.
+- **Suspect readings:** leave out training readings marked with a sensor-problem flag.
+- **Community corrections:** choose a reading and change its normal/alert label
+  or whether it is used in training. The full table is under **Training readings**.
+- **Location inputs:** train without coordinates, site names, or sensor IDs.
+  This doesn't delete those details from the saved data.
 
-Training importance changes what errors count most during learning. **Recorded success
-targets** are separate evaluation limits; they are not training settings. A target marked
-**Met** refers to one run's observed prediction rate, not proven reliability or every
-resource/governance requirement. The original goals and underlying records remain accessible.
+For corrections, the training button becomes available once you've made a change.
+Use **Reset readings** before switching to another question with unapplied edits.
 
-## Four consequential choices
+These questions are starting points for discussion. No community has approved
+the questions or targets used here.
 
-- **Give missed alerts more importance:** multiply the training loss for alert examples.
-- **Leave out flagged readings:** exclude flagged training rows, keeping test rows fixed.
-- **Edit labels or include readings:** select **Community corrections**, choose a reading,
-  then change its normal/alert label or training-inclusion checkbox. Corrections immediately
-  update the draft and its counts; **Train and compare** saves an immutable data variant.
-  The optional **Training readings** table also supports edits.
-  Labels must be `normal` or `alert` here; Advanced supports additional categories.
-- **Leave out location information:** exclude coordinates, site, and sensor identifiers
-  from model inputs. Older raw data snapshots remain on disk; this is not data erasure.
+## Reading the results
 
-The **Question** selector expresses these choices as community questions, not model settings.
-The questions and targets are proposals for discussion, not community-approved requirements.
+Every run compares your choice with the original model, not the previous run.
+Both use the same model setup, random seed, and 144 test readings. The original
+model is reused after its first training.
 
-## Worked community example
+An **alert** means a fictional reading needs review; it isn't a health warning.
+A **missed alert** is an alert that the model calls normal. A **false alarm** is a
+normal reading that the model calls an alert. **Accuracy** is the share of all
+readings classified correctly.
 
-We selected: **Can we catch more readings needing review without too many false alarms?**
-The test records criteria before training, compares a non-AI demonstration rule and a simpler
-linear classifier, then repeats the original/5x-weighted neural pair with five fixed seeds.
-Python socket operations are blocked during training, inference, and checkpoint restoration.
-Four of five altered runs met every target; one missed the 10% missed-alert limit.
-That is not consistently passing, and it is not evidence of real-world health protection.
-See the [recorded walkthrough and results](docs/community-study.md).
+The comparison shows the counts and the tradeoff. Fewer missed alerts can come
+with more false alarms, even if overall accuracy falls.
 
-```powershell
-python -m scripts.community_study --workspace outputs/new-community-study
-python app.py --workspace outputs/new-community-study
-```
+The default prediction targets are at least 80% accuracy, no more than 10% missed
+alerts, and no more than 20% false alarms. These are separate from training
+importance. **Met** means a target was met in that run, not that the model is
+reliable in the real world. The original targets are kept with each comparison.
 
-Fresh-workspace runs save `protocol.json` before training and produce `study-results.json`,
-`community-study.html`, and `community-study.md`. **Download worked example** downloads the
-self-contained HTML report when the app uses that study workspace. Existing studies are
-never overwritten by the script. Raw synthetic checkpoints/results remain ignored by Git.
+**Learned weights** shows the numbers the network learned. **Advanced** has more
+model choices, data editing, goals, and experiments. Writing a project description
+there doesn't change training; those fields aren't prompts for a language model.
 
-Editing a label or Use reading checkbox selects the data-edit choice automatically.
-**Train and compare** is disabled until a correction exists for the correction question.
-Pending corrections keep other questions disabled until **Reset readings** or a return
-to the correction question, so edits cannot be accidentally ignored.
-Reading IDs and measurements are read-only on the simple screen. Advanced supports
-editing measurements and adding examples. To switch to a different intervention
-after editing, reset the table first; edits are never silently ignored.
+## Data and limits
 
-The source contains 720 invented readings, with 576 training candidates and 144
-original test readings. An additional validation split is used within the neural
-training candidates. Labels are generated by a noisy, site-dependent synthetic rule;
-they are not official thresholds. See [data provenance](data/PROVENANCE.md).
-The model, training, checkpoints, learned weights, and measured outcomes are real.
+There are 720 simulated readings: 576 training candidates and 144 test readings.
+The network also sets aside some training candidates for validation. The test
+readings and their original labels stay unchanged when you edit training data.
+See [where the data comes from](data/PROVENANCE.md).
 
-**Learned weights** shows initialization, learned tensors, distributions, and individual
-connections for both models. **Advanced** preserves the original revisitable lab:
-goals, dataset variants, all four model families, actual weight editing/freezing,
-threshold experiments, evaluation, comparison, and lineage.
+This is a single-user prototype. Repeatedly testing against the same readings can
+overfit them. Memory is sampled, not capped, and visible weights don't prove
+fairness or explain cause and effect. Don't use the results for health decisions
+or enter sensitive community data.
 
-## Goals and saved work
+## Saved work
 
-Before the first simple comparison, criteria are recorded: accuracy >=80%,
-missed-alert rate <=10%, false-alarm rate <=20%, local/offline operation,
-inspectable parameters, and sampled process RAM <=1 GB for new studies. Older studies
-keep their original recorded budgets. Geographic removal is
-**optional**, not a default ethical requirement. Advanced can revise criteria before
-the first simple comparison. Subsequent simple comparisons retain the original
-goal revision even if Advanced later saves revised goals.
-
-No goal automatically changes training or guarantees an outcome. Text fields
-in Advanced record the study; they are not prompts interpreted by an LLM.
-
-Records, data snapshots, and local checkpoints persist under `outputs/simple-lab/`,
-which is ignored by Git. Start an independent study with:
+**Saved runs** keeps your comparisons. By default, data versions and model files
+are stored in `outputs/simple-lab/`, which isn't committed to GitHub.
+To start a separate study on Windows:
 
 ```powershell
-python app.py --workspace outputs/another-study --port 7863
+.\.venv\Scripts\python.exe app.py --workspace outputs/another-study --port 7863
 ```
 
-The experiment ZIP includes metrics, configurations, source/version hashes,
-learned parameters, and original-goal results. It omits raw datasets and executable
-checkpoint files. Reproduction needs the saved local workspace and matching dependencies.
+**Download experiment record** exports the settings, metrics, learned parameters,
+and data-version references. It doesn't include the raw datasets or checkpoint
+files, so keep the local workspace to reproduce a run. Only load checkpoint files
+you trust.
 
-## Tests and architecture
+## Worked example
+
+We tested whether giving alerts five times the training importance would reduce
+misses without too many false alarms. In one run, missed alerts fell from 8 to 3,
+while false alarms rose from 5 to 13. Four of five runs met the recorded targets;
+one didn't. That isn't a consistently successful result.
+
+The study also compares a simple rule and a linear model. The
+[full write-up](docs/community-study.md) includes the targets, results, and limits.
+To repeat it in a new workspace:
 
 ```powershell
-python -m pip install -r requirements-dev.txt
-python -m pytest
-python -m scripts.demo
-python -m scripts.replay EXPERIMENT_ID --workspace outputs/simple-lab
+.\.venv\Scripts\python.exe -m scripts.community_study --workspace outputs/new-community-study
+.\.venv\Scripts\python.exe app.py --workspace outputs/new-community-study
 ```
 
-The numerical engine is reused from the private `small-local-ai-playground` prototype.
-`playground/service.py` adds paired, automatically named experiments; `playground/views.py`
-provides concise comparison views; `app.py` presents Simple, Saved runs, and Advanced.
-`advanced_lab.py` retains the original lab without changing the original repository.
-See [design decisions](docs/design.md), [landscape comparison](docs/landscape.md),
-and [OEDP alignment](docs/oedp-alignment.md).
+## Development
 
-Screenshots: [simple playground](docs/screenshots/playground.png),
-[label editing](docs/screenshots/label-edit.png), [learned weights](docs/screenshots/weights.png),
-and [390px layout](docs/screenshots/mobile-390.png).
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m pytest
+```
 
-## Scope and licensing
+The interface uses Gradio, with PyTorch and scikit-learn for the models. There are
+no pretrained language models or live sensor feeds.
 
-Single-user, local prototype. Synthetic data is not evidence about a real community.
-The test set is visible and repeated experimentation can overfit it. RAM is sampled,
-not enforced. Learned parameters are inspectable, but that does not establish causal
-explanations or fairness. The ZIP is not a complete portable reproduction bundle.
-Local joblib checkpoints are trusted files; do not replace them with unknown files.
+More background: [design](docs/design.md), [related tools](docs/landscape.md),
+and [OEDP alignment](docs/oedp-alignment.md). There's also a
+[screenshot of the playground](docs/screenshots/playground.png).
 
-No pretrained language models, LoRA, quantization, remote API, collaboration,
-or live environmental feed is implemented. These remain future extensions.
-Models use existing open-source architectures with locally learned weights;
-this is not a claim that a pretrained model is being imported or that checkpoints
-are a fully open licensed release.
-
-**This repository is private. Licensing is intentionally undecided during the
-research/prototype stage. No project open-source license has been selected.**
-Dependency licenses remain their respective authors' licenses. This is a proposed
-OEDP-aligned research prototype, not an official or endorsed OEDP product.
+The repo is public, but no project license has been selected. Dependencies keep
+their own licenses. This is an independent prototype, not an official OEDP product.
