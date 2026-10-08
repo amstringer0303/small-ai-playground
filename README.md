@@ -4,8 +4,7 @@ A playground for trying a small AI model and seeing how different choices affect
 its predictions. The example is air quality: which sensor readings need a review?
 
 The neural network trains on your computer. The training and results are real,
-but the readings are dummy data. This is a research prototype, not a chatbot or an
-air-quality warning service.
+but the readings are dummy data. This is a research prototype. 
 
 ## Try it
 
@@ -97,7 +96,7 @@ you trust.
 
 ## Worked example
 
-We tested whether giving alerts five times the training importance would reduce
+I tested whether giving alerts five times the training importance would reduce
 misses without too many false alarms. In one run, missed alerts fell from 8 to 3,
 while false alarms rose from 5 to 13. Four of five runs met the recorded targets;
 one didn't. That isn't a consistently successful result.
@@ -121,9 +120,3 @@ To repeat it in a new workspace:
 The interface uses Gradio, with PyTorch and scikit-learn for the models. There are
 no pretrained language models or live sensor feeds.
 
-More background: [design](docs/design.md), [related tools](docs/landscape.md),
-and [OEDP alignment](docs/oedp-alignment.md). There's also a
-[screenshot of the playground](docs/screenshots/playground.png).
-
-The repo is public, but no project license has been selected. Dependencies keep
-their own licenses. This is an independent prototype, not an official OEDP product.
